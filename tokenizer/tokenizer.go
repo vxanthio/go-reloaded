@@ -4,7 +4,28 @@ func Tokenize(text string) []string {
 	currentPunctuation := ""
 	currentword := ""
 	tokens := []string{}
+	currentRule := ""
+	isInRule := false
 	for _, ch := range text {
+		if ch == '(' {
+			isInRule = true
+		}
+		if isInRule == true {
+			if ch != '(' && ch != ')' {
+				currentRule += string(ch)
+			}
+		}
+		if isInRule == false {
+			if ch == ')' {
+				isInRule = false
+				tokens = append(tokens, currentRule)
+				currentRule = ""
+				if ch != '(' {
+					currentRule += string(ch)
+				}
+				continue
+			}
+		}
 		if ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' {
 			currentword += string(ch)
 			if currentPunctuation != "" {
