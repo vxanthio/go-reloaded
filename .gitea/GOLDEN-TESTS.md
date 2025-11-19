@@ -1,22 +1,164 @@
-Test 1: 1E files were deleted → 30 files were deleted
+# Golden Test Suite — go-reloaded
 
-Test 2: it has been 10 (bin) since the last time i saw you → it has been 2 years since the last time i saw you
+This file contains the official golden tests for validating the go-reloaded transformation pipeline.  
+Each test includes Input, Expected Output, and Rules Covered.
 
-Test 3: last night was amazing (up)! → last night was AMAZING!
+---
 
-Test 4: did you go to the SUPERMARKET? (low) → did you go to the supermarket?
+## Test 1 — Hexadecimal Conversion
 
-Test 5: I just came back from my vacations in italy (cap). → I just came back from my vacations in Italy.
+### Input
+1E files were deleted
 
-Test 6: This is so fun (up, 2)! → This is SO FUN!
+### Expected Output
+30 files were deleted
 
-Test 7: Did you bring my wallet , as i asked you to do? → Did you bring my wallet, as i asked you to do?
+### Rules Covered
+- Hexadecimal number conversion
 
-Test 8: I was thinking ... it was very kind the way you step up to defend me. → I was thinking... it was very kind the way you step up to defend me.
+---
 
-Test 9: This dress is trully ' spectacular '! → This dress is trully 'spectacular'!
+## Test 2 — Binary Conversion
 
-Test 10: I really appreciate a honest man! → I really appreciate an honest man!said,'Catch you on the flip side, buddy. Have a great night'."
-Test 11:
-Input:I was looking through my old photos and i couldn’t believe it , it has been 10 (bin) years since the last time we went for vacation. I would never deleted this 1E photos , we had such a good time (up, 2) in paris (cap) and seeing them remind me that. We should go to grab a coffee some time , it would be so fun (up) to CATCH (low) up. I was thinking ... back then we was in the same bookclub. Do you still read books? I am reading something but i dont want to spoil you , this book is trully ' amazing ' tho. I would love to hear a opinion from you. As the main character said, 'Catch you on the flip side, buddy. Have a great night'.
-Output:I was looking through my old photos and i couldn’t believe it, it has been 2 years since the last time we went for vacation. I would never deleted this 30 photos, we had such a GOOD TIME in Paris and seeing them remind me that. We should go to grab a coffee some time, it would be so FUN to catch up. I was thinking... back then we was in the same bookclub. Do you still read books? I am reading something but i dont want to spoil you, this book is trully 'amazing' tho. I would love to hear an opinion from you. As the main character said, 'Catch you on the flip side, buddy. Have a great night'.
+### Input
+it has been 10 (bin) since the last time i saw you
+
+### Expected Output
+it has been 2 years since the last time i saw you
+
+### Rules Covered
+- Binary number conversion
+- Word replacement (“years”)
+
+---
+
+## Test 3 — Uppercase Transformation
+
+### Input
+last night was amazing (up)!
+
+### Expected Output
+last night was AMAZING!
+
+### Rules Covered
+- (up) → uppercase previous word
+- punctuation hugging
+
+---
+
+## Test 4 — Lowercase Transformation
+
+### Input
+did you go to the SUPERMARKET? (low)
+
+### Expected Output
+did you go to the supermarket?
+
+### Rules Covered
+- (low) → lowercase previous word
+
+---
+
+## Test 5 — Capitalization
+
+### Input
+I just came back from my vacations in italy (cap).
+
+### Expected Output
+I just came back from my vacations in Italy.
+
+### Rules Covered
+- (cap) → capitalize previous word
+- punctuation attachment
+
+---
+
+## Test 6 — Uppercase Range Transformation
+
+### Input
+This is so fun (up, 2)!
+
+### Expected Output
+This is SO FUN!
+
+### Rules Covered
+- (up, n) applied to previous 2 words
+- punctuation hugging
+
+---
+
+## Test 7 — Comma Spacing Correction
+
+### Input
+Did you bring my wallet , as i asked you to do?
+
+### Expected Output
+Did you bring my wallet, as i asked you to do?
+
+### Rules Covered
+- punctuation spacing normalization (no space before comma, one after)
+
+---
+
+## Test 8 — Punctuation Groups
+
+### Input
+I was thinking ... it was very kind the way you step up to defend me.
+
+### Expected Output
+I was thinking... it was very kind the way you step up to defend me.
+
+### Rules Covered
+- grouped punctuation (...)
+- spacing rules
+
+---
+
+## Test 9 — Quote Tightening
+
+### Input
+This dress is trully ' spectacular '!
+
+### Expected Output
+This dress is trully 'spectacular'!
+
+### Rules Covered
+- remove spaces inside quotes
+- punctuation hugging
+
+---
+
+## Test 10 — Article Correction (a → an)
+
+### Input
+I really appreciate a honest man!
+
+### Expected Output
+I really appreciate an honest man!
+
+### Rules Covered
+- article correction before vowels/h
+
+---
+
+# Test 11 — Full Mixed-Rules Benchmark Paragraph
+
+### Input
+I opened my 1E (hex) old folders and i realized something ... i had exactly 1010 (bin) unread messages !? Then i found a photo of my friend   '   George   '  which made me smile , because we had such a nice (up, 2) trip to athens (cap) back in the day. A honest mistake happened though : someone wrote a very WEird sentence (low) right under it. I tried to fix it but i was thinking ... maybe i should write a, helpful note instead. As the main character used to say , ' take care ' !
+
+### Expected Output
+I opened my 30 old folders and i realized something... i had exactly 10 unread messages!? Then i found a photo of my friend 'George' which made me smile, because we had such a NICE TRIP to Athens back in the day. An honest mistake happened though: someone wrote a very weird sentence right under it. I tried to fix it but i was thinking... maybe i should write an helpful note instead. As the main character used to say, 'take care'!
+
+### Rules Covered
+- hex conversion  
+- binary conversion  
+- (up, n) range rules  
+- (low)  
+- (cap)  
+- quote tightening  
+- punctuation grouping (..., !?)  
+- punctuation normalization  
+- article rule a → an (including across punctuation)  
+- spacing normalization  
+- full pipeline integration  
+

@@ -1,114 +1,361 @@
-Text Editing & Auto-Correction Tool — Analysis Document
+# User Guide — go-reloaded  
+**Location:** `.gitea/docs/user-guide.md`  
+**Version:** 2.0  
 
-Author: Βασιλική Ξανθιώτη
-Date: 19/10/2025
-Version: 1.0
+---
 
-1. Περιγραφή του προβλήματος
+## Overview
 
-Το πρόγραμμα παίρνει ένα κείμενο και το διορθώνει ή το μορφοποιεί σύμφωνα με συγκεκριμένους κανόνες.
+**go-reloaded** is a command-line text editing and auto-correction tool.  
+It reads a text file, applies a series of deterministic transformation rules, and outputs a fully corrected version of the text.
 
-Δεν μπορεί να καταλάβει το νόημα του κειμένου, οπότε του δίνουμε ξεκάθαρους κανόνες για να φέρει το επιθυμητό αποτέλεσμα: ένα πιο σωστό και ευανάγνωστο κείμενο.
+The tool does **not** understand meaning or grammar.  
+It performs strictly mechanical operations based on predefined rules.
 
-Το input είναι ένα αρχείο (file) με το κείμενο.
+This document explains:
 
-Το πρόγραμμα επεξεργάζεται το input, εφαρμόζει τους κανόνες και αποθηκεύει το αποτέλεσμα σε ένα νέο αρχείο (output).
+- what the program does,  
+- how each rule works,  
+- why the chosen architecture is appropriate,  
+- how the processing pipeline is structured.
 
-2. Κανόνες που πρέπει να ακολουθηθούν
+---
 
-2.1 (hex)
+## Problem Description
 
-Αν η προηγούμενη λέξη είναι δεκαεξαδικός αριθμός (hex), το πρόγραμμα την μετατρέπει σε δεκαδικό.
+The program takes an **input file** containing text.  
+It processes the content, applies transformation rules, and writes the final corrected text into a **new output file**.
 
-Παράδειγμα: 1E (hex) → 30
+The purpose is to transform low-quality or unformatted text into a clean and readable version using purely deterministic rules.
 
-2.2 (bin)
+The program:
 
-Αν η προηγούμενη λέξη είναι δυαδικός αριθμός (bin), το πρόγραμμα την μετατρέπει σε δεκαδικό.
+- does **not** understand semantics,  
+- does **not** interpret context,  
+- does **not** decide what “sounds better,”  
+- only performs rule-driven transformations.
 
-Παράδειγμα: 10 (bin) → 2
+---
 
-2.3 (up), (low), (cap)
+## Transformation Rules
 
-(up) → κεφαλαία
+Below is the full list of transformations.
 
-(low) → μικρά
+### ## Number Conversions
 
-(cap) → πρώτη κεφαλαία γράμμα
+### **(hex) — Hexadecimal → Decimal**
+If the previous token is a valid hexadecimal number (base 16), convert it to decimal.  
+Invalid hex results in keeping the original word and removing the tag.
 
-Παράδειγμα: amazing (up) → AMAZING
+**Example:**  
+`1E (hex)` → `30`
 
-2.4 (up, n), (low, n), (cap, n)
+---
 
-Ο αριθμός δείχνει πόσες προηγούμενες λέξεις θα μετατραπούν.
+### **(bin) — Binary → Decimal**
+Convert the previous token from binary (base 2) to decimal.  
+Invalid binary removes the tag only.
 
-Παράδειγμα: so fun (up, 2) → SO FUN
+**Example:**  
+`10 (bin)` → `2`
 
-2.5 Σημεία στίξης
+---
 
-Δεν υπάρχει κενό πριν από σημεία στίξης (.,!?;:) και υπάρχει κενό μόνο μετά, εκτός αν είναι στο τέλος πρότασης.
+## Case Transformation Rules
 
-Παράδειγμα: wallet , as → wallet, as
+### **(up)**  
+Convert previous word to uppercase.  
+`amazing (up)` → `AMAZING`
 
-2.6 Εξαιρέσεις στα σημεία στίξης
+### **(low)**  
+Convert previous word to lowercase.  
+`LOUD (low)` → `loud`
 
-Για ... ή !?, τα σημεία στίξης μένουν ενωμένα και βάζει κενό μόνο μετά το τελευταίο.
+### **(cap)**  
+Capitalize previous word.  
+`bridge (cap)` → `Bridge`
 
-Παράδειγμα: I was thinking ... we should go → I was thinking... we should go
+### **Range Transformations — (up, n), (low, n), (cap, n)**  
+Apply transformation to previous **n** words (words only, no punctuation).
 
-2.7 Εισαγωγικά
+`so fun (up, 2)` → `SO FUN`
 
-Τα εισαγωγικά πρέπει να έχουν ζευγάρι.
+---
 
-Δεν υπάρχει κενό μετά το πρώτο ή πριν το δεύτερο εισαγωγικό, ακόμα και αν υπάρχουν πολλές λέξεις μέσα.
+## Punctuation Rules
 
-Παράδειγμα: ‘ fun ’ → ‘fun’
+### ### Basic Spacing Rules
 
-2.8 “a” → “an”
+Punctuation marks (`. , ! ? : ;`) must:
 
-Αν η λέξη “a” προηγείται φωνήεντος, γίνεται “an”.
+- attach directly to the previous word,  
+- have **no space before**,  
+- have **one space after** (unless followed by newline).
 
-Παράδειγμα: a apple → an apple
+Example:  
+`wallet , as` → `wallet, as`
 
-3. Σύγκριση Pipeline και FSM αρχιτεκτονικής
+---
 
-Pipeline:
+### ### Punctuation Groups
 
-Διαχωρίζει το πρόβλημα σε στάδια (modules).
+Certain punctuation combinations must be treated as single units:
 
-Κάθε στάδιο εκτελεί συγκεκριμένη λειτουργία και επικοινωνεί με το επόμενο.
+```
+...
+!?
+?!
+```
 
-Πλεονεκτήματα:
+Rules:
 
-Μικρά και ελέγξιμα στάδια
+- remain grouped,  
+- attach to previous word,  
+- followed by exactly one space.
 
-Εύκολη προσθήκη/αφαίρεση λειτουργιών
+**Example:**  
+`I was thinking ... we` → `I was thinking... we`
 
-Μειονέκτημα: Πολλαπλές περασιές ίσως μειώνουν την απόδοση
+---
 
-FSM (Finite State Machine):
+## Quote Rules
 
-Βασίζεται σε καταστάσεις και μεταβάσεις.
+Single quotes `'...'` must:
 
-Πλεονέκτημα: Κατάλληλο για περίπλοκες αλληλεπιδράσεις
+- appear in pairs,  
+- contain **no spaces inside**,  
+- preserve spacing outside,  
+- allow multi-word content.
 
-Μειονέκτημα: Πιο δύσκολη υλοποίηση
+**Example:**  
+`' spectacular '` → `'spectacular'`
 
-4. Επιλογή Αρχιτεκτονικής
+---
 
-Επιλέχθηκε η Pipeline, καθώς κάθε κανόνας μπορεί να εφαρμοστεί ανεξάρτητα.
+## Article Correction Rule
 
-Η προσθήκη νέων κανόνων γίνεται εύκολα με επιπλέον στάδιο στο pipeline.
+Convert **a** → **an** when the next word starts with:
 
-5. Skeleton Plan (Pipeline Flow)
+- a vowel (`a, e, i, o, u`)  
+- letter `h`  
 
-Stage 1:Διαβάζει το αρχείο εισόδου και αποθηκεύει το περιεχόμενο.
+Case-insensitive and works through punctuation.
 
-Stage 2:Χωρίζει το κείμενο σε λέξεις/tokens.
+**Example:**  
+`a, honest` → `an, honest`
 
-Stage 3:Ελέγχει κάθε token και εφαρμόζει τους κανόνες (hex, bin, up, low, cap, a→an, punctuation, quotes).
+---
 
-Stage 4:Αποθηκεύει το τελικό κείμενο σε νέο αρχείο.
+## Edge Cases & Error Handling
 
+### Invalid numbers  
+`ZZ (hex)` → `ZZ`
 
+### Tags without previous word  
+`(up) Hello` → remove tag
 
+### Malformed tags  
+Ignored safely:
+
+```
+(up,)
+(low, 0)
+(bin, xyz)
+(hex
+```
+
+### Word counting in range rules  
+Punctuation and spaces do **not** count.
+
+### Line breaks  
+Must be preserved exactly.
+
+---
+
+## Architectural Comparison
+
+The go-reloaded project can theoretically be implemented using:
+
+---
+
+### ## Pipeline Architecture (Chosen)
+
+**Characteristics:**
+
+- Each stage performs one well-defined transformation.
+- Output of one stage flows into the next.
+- Highly modular and testable.
+- Easy to add/remove rules.
+- Clear separation of concerns.
+
+**Advantages:**
+
+- predictable execution order  
+- clean debugging  
+- independent testing per module  
+- easy auditor verification  
+- simple extensibility  
+
+**Disadvantages:**
+
+- multiple passes may be slightly slower (not relevant here)
+
+---
+
+### ## FSM Architecture (Rejected)
+
+**Characteristics:**
+
+- One large machine controlling states & transitions
+- Single-pass logic
+- Rule handling deeply interconnected
+
+**Advantages:**
+
+- fast, memory-efficient
+
+**Disadvantages:**
+
+- hard to read  
+- extremely hard to maintain  
+- not suitable for many loosely related rules  
+- difficult for peer auditing  
+- rule interactions become tangled  
+
+---
+
+### **Final Decision:** Pipeline Architecture
+
+It is more readable, modular, and aligns with Zone01 audit expectations.  
+Every rule is isolated and testable, ensuring deterministic and reproducible behavior.
+
+---
+
+## Pipeline Processing Flow
+
+The full processing flow is:
+
+```
+Input File
+   ↓
+Stage 1 — Input Reader
+   ↓
+Stage 2 — Tokenizer
+   ↓
+Stage 3 — Rule Processor
+   ↓
+Stage 4 — Formatter
+   ↓
+Output File
+```
+
+### Stage Responsibilities:
+
+#### **Input Reader**
+Reads file, returns raw text.
+
+#### **Tokenizer**
+Splits into tokens:
+- words  
+- punctuation  
+- punctuation groups  
+- rule tags  
+- spaces  
+
+Preserves structure.
+
+#### **Rule Processor**
+Applies all transformations in deterministic order:
+- hex → decimal  
+- bin → decimal  
+- case rules  
+- ranged case rules  
+- quotes  
+- article corrections  
+- punctuation rules  
+- spacing normalization  
+
+#### **Formatter**
+Joins tokens, reconstructs final text, preserves newlines.
+
+---
+
+## Example Transformations
+
+### Example 1 — Hex + Case
+Input:  
+`We saw 1E (hex) birds. It was amazing (up)!`
+
+Output:  
+`We saw 30 birds. It was AMAZING!`
+
+---
+
+### Example 2 — Article + Range
+Input:  
+`a honest friend said it was so fun (up, 2)`
+
+Output:  
+`an honest friend said it was SO FUN`
+
+---
+
+### Example 3 — Punctuation Groups + Quotes
+Input:  
+`I was thinking ... this is ' cool ' tho`
+
+Output:  
+`I was thinking... this is 'cool' tho`
+
+---
+
+## Using the Program
+
+### Running the tool
+
+```
+go run main.go <input_file> <output_file>
+```
+
+Example:
+
+```
+go run main.go samples/input.txt samples/output.txt
+```
+
+---
+
+## Relation to Golden Tests
+
+Your solution is **correct only if** the output matches:
+
+```
+.gitea/docs/golden-tests.md
+```
+
+Golden tests:
+
+- define the required output  
+- cover every rule  
+- include tricky edge cases  
+- include a long benchmark paragraph  
+- are used during peer audits  
+
+Your program must match them **character by character**.
+
+---
+
+## Summary
+
+The user guide has explained:
+
+- the purpose of the tool  
+- all supported rules  
+- rule examples  
+- edge case handling  
+- architectural comparison  
+- pipeline flow  
+- how to run the program  
+- its connection to golden tests  
+
+go-reloaded is a deterministic, auditable, rule-driven text transformation system implemented with a clean Pipeline Architecture.

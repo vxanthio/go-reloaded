@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"platform.zone01.gr/git/vxanthio/go-reloaded/inputreader"
-	"platform.zone01.gr/git/vxanthio/go-reloaded/tokenizer"
+	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/inputreader"
+	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/tokenizer"
 )
 
 func main() {
