@@ -1,66 +1,136 @@
 package tokenizer
 
 func Tokenize(text string) []string {
+	currentWord := ""
 	currentPunctuation := ""
-	currentword := ""
-	tokens := []string{}
 	currentRule := ""
 	isInRule := false
+	tokens := []string{}
+
 	for _, ch := range text {
+
+		// -------------------------
+		// RULE START
+		// -------------------------
 		if ch == '(' {
-			isInRule = true
-		}
-		if isInRule == true {
-			if ch != '(' && ch != ')' {
-				currentRule += string(ch)
+			// Flush what existed before entering rule
+			if currentWord != "" {
+				tokens = append(tokens, currentWord)
+				currentWord = ""
 			}
+			if currentPunctuation != "" {
+				tokens = append(tokens, currentPunctuation)
+				currentPunctuation = ""
+			}
+
+			isInRule = true
+			currentRule = ""
+			continue
 		}
-		if isInRule == false {
+
+		// -------------------------
+		// INSIDE RULE
+		// -------------------------
+		if isInRule {
 			if ch == ')' {
 				isInRule = false
-				tokens = append(tokens, currentRule)
+				tokens = append(tokens, "("+currentRule+")")
 				currentRule = ""
-				if ch != '(' {
-					currentRule += string(ch)
-				}
 				continue
 			}
+			currentRule += string(ch)
+			continue
 		}
-		if ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' {
-			currentword += string(ch)
+
+		// -------------------------
+		// GROUPED PUNCTUATION LOGIC (... !! ?? !? ?!)
+		// -------------------------
+		if ch == '.' || ch == '!' || ch == '?' {
+			if currentPunctuation != "" {
+				last := currentPunctuation[len(currentPunctuation)-1]
+
+				// ...
+				if ch == '.' && last == '.' {
+					currentPunctuation += string(ch)
+					continue
+				}
+				// !!
+				if ch == '!' && last == '!' {
+					currentPunctuation += string(ch)
+					continue
+				}
+				// !?
+				if ch == '!' && last == '?' {
+					currentPunctuation += string(ch)
+					continue
+				}
+				// ?!
+				if ch == '?' && last == '!' {
+					currentPunctuation += string(ch)
+					continue
+				}
+				// ??
+				if ch == '?' && last == '?' {
+					currentPunctuation += string(ch)
+					continue
+				}
+			}
+		}
+
+		// -------------------------
+		// WORD DETECTION (letters/digits)
+		// -------------------------
+		if (ch >= 'a' && ch <= 'z') ||
+			(ch >= 'A' && ch <= 'Z') ||
+			(ch >= '0' && ch <= '9') {
+
+			// flush punctuation before starting a new word
 			if currentPunctuation != "" {
 				tokens = append(tokens, currentPunctuation)
 				currentPunctuation = ""
 			}
+
+			currentWord += string(ch)
+			continue
 		}
 
-		if ch == ':' || ch == ';' || ch == ',' || ch == '.' || ch == '!' || ch == '?' {
-			if currentword != "" {
-				tokens = append(tokens, currentword)
+		// -------------------------
+		// SINGLE PUNCTUATION
+		// -------------------------
+		if ch == '.' || ch == ',' || ch == '!' || ch == '?' || ch == ':' || ch == ';' {
+			if currentWord != "" {
+				tokens = append(tokens, currentWord)
+				currentWord = ""
 			}
-			currentword = ""
 			currentPunctuation += string(ch)
+			continue
 		}
+
+		// -------------------------
+		// SPACE
+		// -------------------------
 		if ch == ' ' {
-			if currentword != "" {
-				tokens = append(tokens, currentword)
-				currentword = ""
+			if currentWord != "" {
+				tokens = append(tokens, currentWord)
+				currentWord = ""
 			}
 			if currentPunctuation != "" {
 				tokens = append(tokens, currentPunctuation)
 				currentPunctuation = ""
 			}
+			continue
 		}
-
 	}
-	if currentword != "" {
-		tokens = append(tokens, currentword)
-		currentword = ""
+
+	// -------------------------
+	// FINAL FLUSH AFTER LOOP
+	// -------------------------
+	if currentWord != "" {
+		tokens = append(tokens, currentWord)
 	}
 	if currentPunctuation != "" {
 		tokens = append(tokens, currentPunctuation)
-		currentPunctuation = ""
 	}
-	return tokens
 
+	return tokens
 }
