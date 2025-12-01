@@ -5,14 +5,24 @@ import (
 	"os"
 
 	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/inputreader"
+	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/ruleprocessor"
 	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/tokenizer"
 )
 
 func main() {
-	InputFile := os.Args[1]
-	OutputFile := os.Args[2]
-	Content := inputreader.Readfile(InputFile)
-	tokens := tokenizer.Tokenize(Content)
-	fmt.Println(tokens)
-	os.WriteFile(OutputFile, []byte(Content), 0644)
+	if len(os.Args) != 3 {
+		fmt.Println("Usage:go run main.go <input_file> <output_file>")
+		return
+	}
+	inputFile := os.Args[1]
+	outputFile := os.Args[2]
+	text, err := inputreader.Readfile(inputFile)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+	tokens := tokenizer.Tokenize(text)
+	processed := ruleprocessor.ProcessTokens(tokens)
+	finalText := formatter.BuildOutput(processed)
+
 }
