@@ -24,5 +24,9 @@ func main() {
 	tokens := tokenizer.Tokenize(text)
 	processed := ruleprocessor.ProcessTokens(tokens)
 	finalText := formatter.BuildOutput(processed)
-
+err=os.WriteFile(outputFile[]byte(finalText),0644)
+if err!=nil {
+fmt.Println("Error writing output:",err)
+return 
+}
 }
