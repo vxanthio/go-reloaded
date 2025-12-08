@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/formatter"
 	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/inputreader"
 	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/ruleprocessor"
 	"platform.zone01.gr/git/vxanthio/go-reloaded/internal/tokenizer"
@@ -18,15 +19,15 @@ func main() {
 	outputFile := os.Args[2]
 	text, err := inputreader.Readfile(inputFile)
 	if err != nil {
-		fmt.Println("Error reading file:", err)
+		fmt.Println(err)
 		return
 	}
 	tokens := tokenizer.Tokenize(text)
 	processed := ruleprocessor.ProcessTokens(tokens)
-	finalText := formatter.BuildOutput(processed)
-err=os.WriteFile(outputFile[]byte(finalText),0644)
-if err!=nil {
-fmt.Println("Error writing output:",err)
-return 
-}
+	finalText := formatter.Format(processed)
+	err = os.WriteFile(outputFile, []byte(finalText), 0644)
+	if err != nil {
+		fmt.Println("Error writing output:", err)
+		return
+	}
 }

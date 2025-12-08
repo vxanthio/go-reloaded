@@ -5,12 +5,10 @@ import (
 	"os"
 )
 
-func Readfile(InputFile string) string {
+func Readfile(InputFile string) (string, error) {
 	InputContent, err := os.ReadFile(InputFile)
 	if err != nil {
-
-		fmt.Println("Σφαλμα δεν μπορεσα να ανοιξω το αρχειο ελεγχου")
-		return ""
+		return "", fmt.Errorf("failed to read file %q:%w", InputFile, err)
 	}
-	return string(InputContent)
+	return string(InputContent), nil
 }
