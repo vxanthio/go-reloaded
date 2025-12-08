@@ -76,18 +76,6 @@ func Tokenize(text string) []string {
 				}
 			}
 		}
-		if ch == '\'' {
-			if currentWord != "" {
-				tokens = append(tokens, currentWord)
-				currentWord = ""
-			}
-			if currentPunctuation != "" {
-				tokens = append(tokens, currentPunctuation)
-				currentPunctuation = ""
-				tokens = append(tokens, "'")
-				continue
-			}
-		}
 
 		// -------------------------
 		// WORD DETECTION (letters/digits)
@@ -109,7 +97,7 @@ func Tokenize(text string) []string {
 		// -------------------------
 		// SINGLE PUNCTUATION
 		// -------------------------
-		if ch == '.' || ch == ',' || ch == '!' || ch == '?' || ch == ':' || ch == ';' {
+		if ch == '.' || ch == ',' || ch == '!' || ch == '?' || ch == ':' || ch == ';' || ch == '\'' {
 			if currentWord != "" {
 				tokens = append(tokens, currentWord)
 				currentWord = ""

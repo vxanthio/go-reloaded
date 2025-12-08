@@ -26,7 +26,7 @@ func Format(tokens []string) string {
 func isPunctuation(tok string) bool {
 	for _, ch := range tok {
 		switch ch {
-		case '.', ',', '!', '?', ';', ':':
+		case '.', ',', '!', '?', ';', ':', '\'':
 		// It's allowed punctuation → keep checking others
 		default:
 			return false // token contains something else than punctuation
