@@ -32,7 +32,7 @@ func Format(tokens []string) string {
 			result += "'"
 			continue
 		}
-
+		//small changes from stash
 		// 3. Normal word or number
 		if i > 0 {
 			prev := tokens[i-1]
