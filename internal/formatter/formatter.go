@@ -1,65 +1,40 @@
 package formatter
 
-// Format takes the processed tokens and rebuilds the final text.
-// It adds spaces only where needed and keeps punctuation and quotes correctly placed.
 func Format(tokens []string) string {
 	result := ""
 
 	for i, tok := range tokens {
 
-		// 1. Standard punctuation: . , ! ? ; :
+		// 1) Punctuation (.,!?;: or groups like ... !! ?!)
 		if isPunctuation(tok) {
-			// NEVER put a space before punctuation
-			result += tok
+			result += tok // attach directly (NO space before)
 			continue
 		}
 
-		// 2. Single quote: '
-		if tok == "'" {
-			// If next token is a word, then this quote is OPENING
-			isOpening := i+1 < len(tokens) &&
-				!isPunctuation(tokens[i+1]) &&
-				tokens[i+1] != "'"
-
-			if isOpening {
-				// For an opening quote, add one space BEFORE it (if needed)
-				// Example: Wilson: 'I am...
-				if len(result) > 0 && result[len(result)-1] != ' ' {
-					result += " "
-				}
-			}
-			// Closing quote: attach directly (no extra spaces)
-			result += "'"
-			continue
-		}
-
-		// 3. Normal word or number
+		// 2) If it's NOT first token, decide whether to add space
 		if i > 0 {
 			prev := tokens[i-1]
 
-			// If the previous token was an opening quote, DO NOT add a space.
-			// We want 'I (no space between quote and word)
+			// Do NOT put a space if the previous token is a quote '
 			if prev != "'" {
 				result += " "
 			}
 		}
 
+		// 3) Add the actual token (word, number, or ')
 		result += tok
 	}
 
 	return result
 }
 
-// isPunctuation checks if a token contains ONLY punctuation from the set
-// . , ! ? ; : (quotes are NOT included here!)
 func isPunctuation(tok string) bool {
 	for _, ch := range tok {
 		switch ch {
 		case '.', ',', '!', '?', ';', ':':
-		// allowed punctuation, keep checking
 		default:
-			return false // found a non-punctuation character
+			return false
 		}
 	}
-	return true // every character was valid punctuation
+	return true
 }
