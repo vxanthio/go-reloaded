@@ -11,37 +11,22 @@ func Format(tokens []string) string {
 		if isPunctuation(tok) {
 			// NEVER put a space before punctuation
 			result += tok
-			continue
-		}
-
-		// 2. Single quote: '
-		if tok == "'" {
-			// If next token is a word, then this quote is OPENING
-			isOpening := i+1 < len(tokens) &&
-				!isPunctuation(tokens[i+1]) &&
-				tokens[i+1] != "'"
-
-			if isOpening {
-				// For an opening quote, add one space BEFORE it (if needed)
-				// Example: Wilson: 'I am...
-				if len(result) > 0 && result[len(result)-1] != ' ' {
-					result += " "
-				}
-			}
-			// Closing quote: attach directly (no extra spaces)
-			result += "'"
-			continue
-		}
-		//small changes from stash
-		// 3. Normal word or number
-		if i > 0 {
-			prev := tokens[i-1]
-
-			// If the previous token was an opening quote, DO NOT add a space.
-			// We want 'I (no space between quote and word)
-			if prev != "'" {
+			//If next token exists and is NOT punctuation and is NOT "'",
+			//then we add ONE space.
+			if i+1 < len(tokens) && !isPunctuation(tokens[i-1]) && tokens[i+1] != "'" {
 				result += " "
 			}
+
+			continue
+		}
+		//If "'" , attach with no space
+		if tok == "'" {
+			result += tok
+			continue
+		}
+		// If previous token was "'",attach with no space
+		if i > 0 && tokens[i-1] != "'" {
+			result += " "
 		}
 
 		result += tok
